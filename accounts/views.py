@@ -12,6 +12,11 @@ from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 
+from carts.views import _cart_id
+from carts.models import Cart,CartItem
+
+import requests
+
 def register(request):
     
     if request.method == 'POST':
@@ -66,9 +71,92 @@ def login(request):
         user=auth.authenticate(email=email,password=password)
         
         if user is not None:
+            try:
+                cart=Cart.objects.get(cart_id=_cart_id(request))
+                is_cart_item_exists=CartItem.objects.filter(cart=cart).exists()
+                if is_cart_item_exists:
+                    cart_item=CartItem.objects.filter(cart=cart)
+                    
+                    # print(cart_item)
+                    # give the quary set fotr example <QuerySet [<CartItem: CartItem object (60)>, <CartItem: CartItem object (61)>]>
+                    
+                    # getting the product variation by cart id
+                    product_variation=[]
+                    id=[]
+                    for item in cart_item:
+                        variation=item.variation.all()
+                        product_variation.append(list(variation))
+                        id.append(item.id)
+                    # print(product_variation)
+                    # print(id)
+                    # [[<Variation: Black>, <Variation: Small>], [<Variation: Black>, <Variation: Medium>]]
+                    
+                    
+                    # get the cart item from the user to access his product variations
+                    cart_item=CartItem.objects.filter(user=user)
+                    # print(cart_item)
+                    # <QuerySet [<CartItem: CartItem object (56)>, <CartItem: CartItem object (57)>, <CartItem: CartItem object (58)>, <CartItem: CartItem object (59)>]>
+                    ex_var_list=[]
+                    id_existance=[]
+                    for item in cart_item:
+                        existing_variation=item.variation.all()
+                        ex_var_list.append(list(existing_variation))
+                        id_existance.append(item.id)
+                        
+                    # print(ex_var_list)
+                    # [[<Variation: Red>, <Variation: Small>], [<Variation: Red>, <Variation: Medium>], [<Variation: Red>, <Variation: Large>], [<Variation: Blue>, <Variation: Small>]]
+                    # print(id_existance)
+                    # [56, 57, 58, 59]
+                                
+                                                                
+                    item_list=[]
+                    for pr in product_variation:
+                        if pr in ex_var_list:
+                        # increase the cart item quantity
+                            
+                            index=product_variation.index(pr)
+                            item_id=id[index]
+                            item=CartItem.objects.get(id=item_id)
+                            item_list.append(item)
+                            # print(item)
+                            
+                            index_existance=ex_var_list.index(pr)
+                            item_id_existance=id_existance[index_existance]
+                            item_existance=CartItem.objects.get(id=item_id_existance)
+                            # print(item_existance)
+                            
+                            item_existance.quantity+=item.quantity
+                            item_existance.user=user
+                            item_existance.save()
+                            item.delete()
+                        else: 
+                            cart_item=CartItem.objects.filter(cart=cart)
+                            # print(cart_item)
+                            # <QuerySet [<CartItem: CartItem object (60)>, <CartItem: CartItem object (61)>]>
+                            # print(item_list) # which is already in existance list(we add in existance list)
+                            for object in cart_item:
+                                if object not in item_list:
+                                    object.user=user
+                                    object.save()
+                                else:
+                                    pass
+                        
+            except:          
+                pass
             auth.login(request,user)
             messages.success(request,'You are logged in')
-            return redirect('dashboard')
+            url=request.META.get('HTTP_REFERER')
+            try:
+                quary=requests.utils.urlparse(url).query
+                # print(quary)  --> next=/cart/checkout/
+                params=dict(x.split('=')for x in quary.split('&'))
+                # print(params)  --> {'next': '/cart/checkout/'}
+                if 'next' in params:
+                    nextpage=params['next']
+                    return redirect(nextpage)
+                
+            except:
+                return redirect('dashboard')
         
         else:
             # messages.error(request,'Invalid Credentials')
