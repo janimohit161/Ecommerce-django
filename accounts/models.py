@@ -69,6 +69,8 @@ class Account(AbstractBaseUser):
     
     objects = MyAccountManager()
     
+    def full_name(self):
+        return f'{self.first_name}{self.last_name}'
     
     def __str__(self):
         return self.email
