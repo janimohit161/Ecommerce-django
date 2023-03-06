@@ -34,6 +34,17 @@
 			<figcaption class="info-wrap">
 				<a href="{{ product.get_url }}" class="title">{{product.product_name}}</a>
 				<div class="price mt-1">${{product.price}}</div> <!-- price-wrap.// -->
+
+				<div class="rating-star">
+					<span>
+						{% if product.averageRating < 0.5 %}<i class="far fa-star"></i>{% elif product.averageRating >= 0.5 and product.averageRating < 1 %}<i class="far fa-star-half-alt"></i>{% else %}<i class="fa fa-star"></i>{% endif %}
+						{% if product.averageRating < 1.5 %}<i class="far fa-star"></i>{% elif product.averageRating >= 1.5 and product.averageRating < 2 %}<i class="far fa-star-half-alt"></i>{% else %}<i class="fa fa-star"></i>{% endif %}
+						{% if product.averageRating < 2.5 %}<i class="far fa-star"></i>{% elif product.averageRating >= 2.5 and product.averageRating < 3 %}<i class="far fa-star-half-alt"></i>{% else %}<i class="fa fa-star"></i>{% endif %}
+						{% if product.averageRating < 3.5 %}<i class="far fa-star"></i>{% elif product.averageRating >= 3.5 and product.averageRating < 4 %}<i class="far fa-star-half-alt"></i>{% else %}<i class="fa fa-star"></i>{% endif %}
+						{% if product.averageRating < 4.5 %}<i class="far fa-star"></i>{% elif product.averageRating >= 4.5 and product.averageRating < 5 %}<i class="far fa-star-half-alt"></i>{% else %}<i class="fa fa-star"></i>{% endif %} 
+						
+					</span>
+				</div>
 			</figcaption>
 		</div>
 	</div> <!-- col.// -->
